@@ -1,0 +1,33 @@
+# data & experiment folders
+/data/
+/TU_Office_to_IOT/
+/TU_Office_to_IOT1/
+/TU_Office_to_IOT11/
+/IOT_Office_to_TU/
+/IOT_Office_to_TU1/
+/IOT_TU_to_Office/
+/IOT_TU_to_Office1/
+/IOT/
+/Office/
+/TU/
+
+# python & notebooks
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# artifacts
+*.pickle
+*.pkl
+*.npz
+*.npy
+*.h5
+*.hdf5
+*.ckpt
+*.log
+TU_Office_to_IOT11/
+*.keras
+*.h5
+*.hdf5
+*.ckpt
+*.csv
