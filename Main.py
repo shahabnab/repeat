@@ -387,7 +387,7 @@ if __name__ == "__main__":
         else:
             print("running all datasets as test dataset")
             batch_size=[512,256,128]
-            epochs_num=[100,120,150]
+            epochs_num=[50,100,120,150,200]
             print(f"running {args.test_dataset} as test dataset, batch size: {batch_size}")
             for ep in epochs_num:
                 for b in batch_size:

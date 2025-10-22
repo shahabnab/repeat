@@ -204,7 +204,7 @@ def f1_minus_entropy(CIRS, Labels, model_prob_head,h, model_logit_head,
     f1,thr = f1_on_train12(CIRS, Labels, model_prob_head,h, weights=weights)
     ent = entropy_on_adaption_logits(model_logit_head, CIRS["ADAPTION"], base=entropy_base)
 
-    return {"f1_train12": f1, "entropy_adaption": ent,"threshold_used":thr, "score_f1_minus_entropy": f1 - ent}
+    return {"f1_train12": f1, "entropy_adaption": ent, "score_f1_minus_entropy": f1 - ent}
 # ======================================================================
     # Closed-form scores for reporting (keep names clear; probs vs logits)
     # ======================================================================

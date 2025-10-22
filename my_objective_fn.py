@@ -101,6 +101,8 @@ def evaluate_model(ae,train_ds,val_ds, CIRS, LosLabels, Weights, h, config):
             lv_filtered    = lv[mask]
             probs_filt     = los_probs[mask]
             h["METRIC_THRESHOLD"] = find_threshold_for_f1(lv_filtered, probs_filt)
+            thrr=h["METRIC_THRESHOLD"]
+            print(f"#######calculated metric threshold: "+str(thrr)+"#############")
             preds_bin = (los_probs >= float(h["METRIC_THRESHOLD"])).astype(int)
             preds_filtered = preds_bin[mask]
             val_auroc = float(roc_auc_score(lv_filtered,probs_filt))
@@ -310,6 +312,8 @@ def evaluate_model(ae,train_ds,val_ds, CIRS, LosLabels, Weights, h, config):
             p_tgt_mean = float(np.mean(adapt_probs))
             prev_gap = abs(p_tgt_mean - y_src_mean)
             config.update( { 
+                            
+                            "METRIC_THRESHOLD":h["METRIC_THRESHOLD"],
                            "CIRS_shapes Train1": CIRS["TRAIN1"].shape,
                             "CIRS_shapes Train2": CIRS["TRAIN2"].shape,
                             "CIRS_shapes Adaption": CIRS["ADAPTION"].shape,
@@ -348,7 +352,6 @@ def evaluate_model(ae,train_ds,val_ds, CIRS, LosLabels, Weights, h, config):
                             "Validation F1 (entropy)": f1_entropy_valid,
                             "score_f1_minus_entropy": f1ent["score_f1_minus_entropy"],
                             "f1_train12": f1ent["f1_train12"],
-                            "threshold_used": f1ent["threshold_used"],
                             "entropy_adaption": f1ent["entropy_adaption"],
                             "bce_train12": bce_train12,
                             "focal_train12": focal_train12,
@@ -500,6 +503,7 @@ def plotting_figures(ae, CIRS, LosLabels, Domains, X_test, h):
             probe_ae(ae, CIRS,LosLabels, h)
             evaluate_model_performance(probe_model, CIRS, LosLabels, h)
             plot_confusion_matrix(los_model, CIRS, LosLabels, h)
+            plot_confusion_matrices_grid( los_model, CIRS, LosLabels, h)
 
 
 

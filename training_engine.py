@@ -379,6 +379,13 @@ def train_model(ae, grl, train_ds, val_ds,test_ds,h, trial, config, num_dom,step
                 marker_every=1,       # every epoch has a symbols
                 filename_prefix="metric"
             )
+            plot_history_dashboard_with_test(
+                history,
+                save_path=h["save_plots"],
+                smoothing=0,        # optional
+                marker_every=1,       # every epoch has a symbols
+                filename_prefix="metric"
+            )
 
             # domain confusion (optional)
             chance = 1.0 / float(num_dom)

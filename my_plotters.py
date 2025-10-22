@@ -22,7 +22,7 @@ import pickle
 
 
 
-def plot_latent_umap(encoder_model, CIRS, Domains,save_plots, title="UMAP of Latent Space"):
+""" def plot_latent_umap(encoder_model, CIRS, Domains,save_plots, title="UMAP of Latent Space"):
     X = np.concatenate([CIRS[k] for k in ("TRAIN1", "TRAIN2", "ADAPTION")])[..., None]
     d = np.concatenate([Domains[k] for k in ("TRAIN1", "TRAIN2", "ADAPTION")])
 
@@ -214,7 +214,200 @@ def plot_umap_input_by_los(CIRS, Domains, LOS, save_plots,
         plt.savefig(base + ".png", dpi=200, bbox_inches="tight")
 
         plt.close()
+ """
 
+def plot_latent_umap(encoder_model, CIRS, Domains,save_plots, title="UMAP of Latent Space"):
+    X = np.concatenate([CIRS[k] for k in ("TRAIN1", "TRAIN2", "ADAPTION")])[..., None]
+    d = np.concatenate([Domains[k] for k in ("TRAIN1", "TRAIN2", "ADAPTION")])
+
+    latent_vectors = encoder_model.predict(X)
+    scaled_latents = StandardScaler().fit_transform(latent_vectors)
+    reducer = umap.UMAP(n_neighbors=20, min_dist=0.1)
+    embedding = reducer.fit_transform(scaled_latents)
+
+    plt.figure(figsize=(8,6))
+    sns.scatterplot(x=embedding[:,0], y=embedding[:,1], hue=d, palette="Set2", s=30, alpha=0.7)
+    plt.title(title)
+    plt.xlabel("UMAP-1", fontsize=13,fontweight="bold")
+    plt.ylabel("UMAP-2", fontsize=13,fontweight="bold")
+    plt.legend(title="Domain", fontsize=10, markerscale=1.8,handlelength=1.6)
+    plt.gca().grid(True, which="major", axis="both", linestyle="--", alpha=0.5)
+    plt.gca().set_axisbelow(True)
+    plt.savefig(os.path.join(save_plots, "latent_umap_latent_vector.png"))
+    plt.close()
+
+
+
+
+def plot_latent_umap_input( CIRS, Domains,save_plots, title=""):
+    X = np.concatenate([CIRS[k] for k in ("TRAIN1", "TRAIN2", "ADAPTION")])
+    d = np.concatenate([Domains[k] for k in ("TRAIN1", "TRAIN2", "ADAPTION")])
+
+    # Flatten each sample if X is 2D (samples, timesteps), else reshape appropriately
+    if X.ndim == 3:
+        X_flat = X.reshape(X.shape[0], -1)
+    else:
+        X_flat = X
+
+    scaled_input = StandardScaler().fit_transform(X_flat)
+    reducer = umap.UMAP(n_neighbors=20, min_dist=0.1)
+    embedding = reducer.fit_transform(scaled_input)
+
+    plt.figure(figsize=(8,6))
+    sns.scatterplot(x=embedding[:,0], y=embedding[:,1], hue=d, palette="Set2", s=30, alpha=0.7)
+    plt.title(title)
+    plt.xlabel("UMAP-1", fontsize=13,fontweight="bold")
+    plt.ylabel("UMAP-2", fontsize=13,fontweight="bold")
+    plt.legend(title="Domain", fontsize=10, markerscale=1.8,handlelength=1.6)
+    plt.gca().grid(True, which="major", axis="both", linestyle="--", alpha=0.5)
+    plt.gca().set_axisbelow(True)
+    plt.savefig(os.path.join(save_plots, "latent_umap_input.png"))
+    plt.close()   
+
+
+
+
+
+
+def plot_latent_umap(encoder_model, CIRS, Domains, save_plots, title=""):
+    X = np.concatenate([CIRS[k] for k in ("TRAIN1", "TRAIN2", "ADAPTION")])[..., None]
+    d = np.concatenate([Domains[k] for k in ("TRAIN1", "TRAIN2", "ADAPTION")])
+
+    latent_vectors = encoder_model.predict(X, verbose=0)
+    scaled_latents = StandardScaler().fit_transform(latent_vectors)
+    reducer = umap.UMAP(n_neighbors=20, min_dist=0.1)
+    embedding = reducer.fit_transform(scaled_latents)
+
+    plt.figure(figsize=(8,6))
+    sns.scatterplot(x=embedding[:,0], y=embedding[:,1], hue=d, palette="Set2", s=30, alpha=0.7)
+    plt.title(title)
+    plt.xlabel("UMAP-1", fontsize=13,fontweight="bold")
+    plt.ylabel("UMAP-2",fontsize=13,fontweight="bold")
+    plt.legend(title="Domain", fontsize=10, markerscale=1.8,handlelength=1.6)
+    plt.gca().grid(True, which="major", axis="both", linestyle="--", alpha=0.5)
+    plt.gca().set_axisbelow(True)
+    os.makedirs(save_plots, exist_ok=True)
+    plt.savefig(os.path.join(save_plots, "latent_umap_latent_vector.png"), bbox_inches="tight", dpi=160)
+    plt.close()
+
+
+
+# ---------- LATENT (encoder output) ----------
+def plot_latent_umap_by_los(encoder_model, CIRS, Domains, LOS, save_plots,
+                                     title="",
+                                     n_neighbors=20, min_dist=0.1, metric="euclidean"):
+    os.makedirs(save_plots, exist_ok=True)
+
+    X = np.concatenate([CIRS[k] for k in ("TRAIN1", "TRAIN2", "ADAPTION")])[..., None]
+    d = np.concatenate([Domains[k] for k in ("TRAIN1", "TRAIN2", "ADAPTION")])
+
+    if isinstance(LOS, dict):
+        y = np.concatenate([LOS[k] for k in ("TRAIN1", "TRAIN2", "ADAPTION")]).ravel()
+    else:
+        y = np.asarray(LOS).ravel()
+
+    # Encode -> scale -> UMAP (fit ONCE on all points)
+    Z = encoder_model.predict(X, verbose=0)
+    Z = StandardScaler().fit_transform(Z)
+    reducer = umap.UMAP(n_neighbors=n_neighbors, min_dist=min_dist, metric=metric)
+    E = reducer.fit_transform(Z)  # (N, 2)
+
+    # Build DF
+    domain_series = pd.Series(d).astype(str)
+    domain_order = sorted(domain_series.unique(), key=lambda x: float(x) if x.replace('.','',1).isdigit() else x)
+    df = pd.DataFrame({
+        "umap1": E[:, 0],
+        "umap2": E[:, 1],
+        "domain": domain_series.values,
+        "los": np.where(y >= 0.5, "LOS", "NLOS")
+    })
+
+    # Global limits for identical axes
+    xpad = 0.05*(df["umap1"].max() - df["umap1"].min())
+    ypad = 0.05*(df["umap2"].max() - df["umap2"].min())
+    xlim = (df["umap1"].min() - xpad, df["umap1"].max() + xpad)
+    ylim = (df["umap2"].min() - ypad, df["umap2"].max() + ypad)
+
+    # Save two separate figures
+    for cls in ("LOS", "NLOS"):
+        sub = df[df["los"] == cls]
+        plt.figure(figsize=(9,7))
+        sns.scatterplot(
+            data=sub, x="umap1", y="umap2",
+            hue="domain", hue_order=domain_order, palette="Set2",
+            s=32, alpha=0.7
+        )
+        plt.title(f"")
+        plt.xlabel("UMAP-1", fontsize=13, fontweight="bold"); plt.ylabel("UMAP-2", fontsize=13, fontweight="bold")
+        plt.xlim(*xlim); plt.ylim(*ylim)
+        plt.gca().grid(True, which="major", axis="both", linestyle="--", alpha=0.5)
+        plt.gca().set_axisbelow(True)
+        plt.legend(title="Domain", bbox_to_anchor=(1.02, 1), loc="upper left", fontsize=10, markerscale=1.8,handlelength=1.6)
+        plt.tight_layout()
+        base = os.path.join(save_plots, f"latent_umap_{cls.lower()}_only")
+        plt.savefig(base + ".png", dpi=200, bbox_inches="tight")
+       
+        plt.close()
+
+
+# ---------- INPUT (raw signals) ----------
+def plot_umap_input_by_los(CIRS, Domains, LOS, save_plots,
+                                    title="",
+                                    n_neighbors=20, min_dist=0.1, metric="euclidean"):
+    os.makedirs(save_plots, exist_ok=True)
+
+    X = np.concatenate([CIRS[k] for k in ("TRAIN1", "TRAIN2", "ADAPTION")])
+    d = np.concatenate([Domains[k] for k in ("TRAIN1", "TRAIN2", "ADAPTION")])
+
+    if isinstance(LOS, dict):
+        y = np.concatenate([LOS[k] for k in ("TRAIN1", "TRAIN2", "ADAPTION")]).ravel()
+    else:
+        y = np.asarray(LOS).ravel()
+
+    # Flatten to 2D
+    X_flat = X.reshape(X.shape[0], -1) if X.ndim == 3 else (X if X.ndim == 2 else X[:, None])
+
+    # Scale -> UMAP (fit ONCE on all points)
+    Z = StandardScaler().fit_transform(X_flat)
+    reducer = umap.UMAP(n_neighbors=n_neighbors, min_dist=min_dist, metric=metric)
+    E = reducer.fit_transform(Z)
+
+    # Build DF
+    domain_series = pd.Series(d).astype(str)
+    domain_order = sorted(domain_series.unique(), key=lambda x: float(x) if x.replace('.','',1).isdigit() else x)
+    df = pd.DataFrame({
+        "umap1": E[:, 0],
+        "umap2": E[:, 1],
+        "domain": domain_series.values,
+        "los": np.where(y >= 0.5, "LOS", "NLOS")
+    })
+
+    # Global limits identical for both
+    xpad = 0.05*(df["umap1"].max() - df["umap1"].min())
+    ypad = 0.05*(df["umap2"].max() - df["umap2"].min())
+    xlim = (df["umap1"].min() - xpad, df["umap1"].max() + xpad)
+    ylim = (df["umap2"].min() - ypad, df["umap2"].max() + ypad)
+
+    # Save two separate figures
+    for cls in ("LOS", "NLOS"):
+        sub = df[df["los"] == cls]
+        plt.figure(figsize=(9,7))
+        sns.scatterplot(
+            data=sub, x="umap1", y="umap2",
+            hue="domain", hue_order=domain_order, palette="Set2",
+            s=32, alpha=0.7
+        )
+        plt.title("")
+        plt.xlabel("UMAP-1"); plt.ylabel("UMAP-2")
+        plt.xlim(*xlim); plt.ylim(*ylim)
+        plt.gca().grid(True, which="major", axis="both", linestyle="--", alpha=0.5)
+        plt.gca().set_axisbelow(True)
+        plt.legend(title="Domain", bbox_to_anchor=(1.02, 1), loc="upper left", borderaxespad=0.)
+        plt.tight_layout()
+        base = os.path.join(save_plots, f"umap_input_{cls.lower()}_only")
+        plt.savefig(base + ".png", dpi=200, bbox_inches="tight")
+
+        plt.close()
 
 
 def signal_entropy(signal):
@@ -598,9 +791,9 @@ def plot_history_dashboard(
     style_map = {
         "train": {"linestyle": "-",  "marker": "o"},
         "val":   {"linestyle": "--", "marker": "^"},
-        "test":  {"linestyle": ":",  "marker": "s"},
+       
     }
-    role_order = ["train", "val", "test"]
+    role_order = ["train", "val"]
 
     for base in order:
         roles = grouped.get(base, {})
@@ -658,6 +851,107 @@ def plot_history_dashboard(
         fig.savefig(png_path, dpi=dpi, bbox_inches="tight")
         plt.close(fig)
 
+def plot_history_dashboard_with_test(
+    history: dict,
+    save_path: str,
+    smoothing: float = 0.0,   # 0 disables EMA
+    dpi: int = 200,
+    filename_prefix: str = "metric",
+    show_markers: bool = True,
+    marker_every: int = 1,    # 1 = every epoch
+    marker_size: float = 4.5,
+    hollow_markers: bool = True,
+):
+    """
+    For each base metric, create ONE figure with train/val/test in it and save to disk.
+    No combined dashboard is created.
+    """
+    os.makedirs(save_path, exist_ok=True)
+
+    # Clean, professional defaults; no explicit colors.
+    plt.rcParams.update({
+        "figure.facecolor": "white",
+        "axes.facecolor": "white",
+        "axes.spines.top": False,
+        "axes.spines.right": False,
+        "axes.grid": True,
+        "grid.linestyle": "--",
+        "grid.alpha": 0.35,
+        "legend.frameon": False,
+        "font.size": 10,
+    })
+
+    # Group by base metric → roles {train,val,test}
+    grouped, order = {}, []
+    for k, v in history.items():
+        role, base = _split_role(k)
+        grouped.setdefault(base, {})[role] = _to_array(v)
+        if base not in order:
+            order.append(base)
+
+    style_map = {
+        "train": {"linestyle": "-",  "marker": "o"},
+        "val":   {"linestyle": "--", "marker": "^"},
+        "test":  {"linestyle": ":",  "marker": "s"},
+    }
+    role_order = ["train", "val", "test"]
+
+    for base in order:
+        roles = grouped.get(base, {})
+        if not roles:
+            continue
+
+        fig, ax = plt.subplots(figsize=(7.5, 4.5))
+
+        for role in role_order:
+            if role not in roles:
+                continue
+            y = roles[role]
+            y = _ema(y, smoothing) if smoothing else y
+            x = np.arange(1, len(y) + 1)
+
+            marker_kwargs = {}
+            if show_markers:
+                marker_kwargs = dict(
+                    marker=style_map[role]["marker"],
+                    markevery=marker_every,
+                    markersize=marker_size,
+                    fillstyle="none" if hollow_markers else "full",
+                    markeredgewidth=1.2,
+                )
+
+            ax.plot(
+                x, y,
+                linewidth=2.0,
+                linestyle=style_map[role]["linestyle"],
+                label=role,
+                **marker_kwargs
+            )
+
+        ax.set_title(_prettify(base), fontsize=12, pad=8)
+        ax.set_xlabel("Epoch"); ax.set_ylabel("Value")
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        ax.grid(True, which="major", axis="both", linestyle="--", alpha=0.5)
+        ax.set_axisbelow(True)
+        if base.lower() in {"lr", "learning_rate"}:
+            ax.ticklabel_format(axis="y", style="sci", scilimits=(0, 0))
+        ax.legend(loc="best", fontsize=9)
+
+        # annotate last value
+        for line in ax.lines:
+            if len(line.get_xdata()) == 0:
+                continue
+            x_last, y_last = line.get_xdata()[-1], line.get_ydata()[-1]
+            ax.annotate(f"{y_last:.4g}", xy=(x_last, y_last),
+                        xytext=(4, 0), textcoords="offset points",
+                        fontsize=8, va="center")
+
+        fig.tight_layout()
+        safe_base = _safe(base)
+        png_path = os.path.join(save_path, f"{filename_prefix}_{safe_base}_with_test.png")
+        fig.savefig(png_path, dpi=dpi, bbox_inches="tight")
+        plt.close(fig)        
+
 
  
 
@@ -714,6 +1008,99 @@ def plot_confusion_matrix(classifier, CIRS, Y, h, title="Confusion Matrix"):
         plt.ylabel("True")
         plt.tight_layout()
         plt.savefig(f"{save_path}/{title} {split}.png"); plt.close()
+
+import os
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.metrics import confusion_matrix, classification_report
+
+import os
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.metrics import confusion_matrix, classification_report
+
+import os
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.metrics import confusion_matrix, classification_report
+
+def plot_confusion_matrices_grid(
+    classifier, CIRS, Y, h, title="Confusion Matrix",
+    suptitle_fs=18, panel_title_fs=14, label_fs=12, tick_fs=11, annot_fs=12, cbar_label_fs=12
+):
+    save_path = h.get("save_plots")
+    os.makedirs(save_path, exist_ok=True)
+    thr = h.get("METRIC_THRESHOLD")
+
+    splits = ["TRAIN1", "TRAIN2", "ADAPTION", "TEST"]
+
+    cms, accs = {}, {}
+    for split in splits:
+        X      = CIRS[split][..., None]
+        y_true = Y[split].astype(int)
+
+        raw    = classifier.predict(X, verbose=0)
+        probs  = _extract_nlos_prob(raw)
+        preds  = (probs >= thr).astype(int)
+
+        print(f"\n=== {split} ===")
+        print(classification_report(y_true, preds, target_names=["LOS","NLOS"]))
+
+        cm = confusion_matrix(y_true, preds)
+        cms[split] = cm
+        accs[split] = np.trace(cm) / np.sum(cm)
+
+    vmax = max(cm.max() for cm in cms.values())
+
+    fig = plt.figure(figsize=(14, 12), constrained_layout=True)
+    gs  = fig.add_gridspec(2, 3, width_ratios=[1, 1, 0.045], height_ratios=[1, 1])
+
+    axes = [
+        fig.add_subplot(gs[0, 0]),
+        fig.add_subplot(gs[0, 1]),
+        fig.add_subplot(gs[1, 0]),
+        fig.add_subplot(gs[1, 1]),
+    ]
+    cax = fig.add_subplot(gs[:, 2])  # colorbar column spanning both rows
+
+    ims = []
+    for ax, split in zip(axes, splits):
+        im = sns.heatmap(
+            cms[split], ax=ax, annot=True, fmt="d", cmap="Blues",
+            cbar=False, vmin=0, vmax=vmax,
+            xticklabels=["LOS","NLOS"], yticklabels=["LOS","NLOS"],
+            annot_kws={"fontsize": annot_fs, "fontweight": "bold"}
+        )
+        ims.append(im)
+
+        ax.set_title(split, fontsize=panel_title_fs, fontweight="bold")
+        ax.set_xlabel(f"Predicted\nAccuracy: {accs[split]:.2f}",
+                      fontsize=label_fs, fontweight="bold")
+        ax.set_ylabel("Actual", fontsize=label_fs, fontweight="bold")
+        ax.tick_params(axis="both", which="major", labelsize=tick_fs)
+        for tick in ax.get_xticklabels() + ax.get_yticklabels():
+            tick.set_fontweight("bold")
+
+    # single shared colorbar in its own column (no overlap)
+    cb = fig.colorbar(ims[0].collections[0], cax=cax)
+    cb.set_label("Count", fontsize=cbar_label_fs, fontweight="bold")
+    cb.ax.tick_params(labelsize=tick_fs)
+    for t in cb.ax.get_yticklabels():
+        t.set_fontweight("bold")
+
+    #fig.suptitle(title, fontsize=suptitle_fs, fontweight="bold", y=0.98)
+
+    out_png = os.path.join(save_path, f"{title}_ALL.png")
+    out_pdf = os.path.join(save_path, f"{title}_ALL.pdf")
+    plt.savefig(out_png, dpi=200)
+    plt.savefig(out_pdf)
+    plt.close()
+
+
+
 
 
 def evaluate_model_performance(probe_model, CIRS, LosLabels, h):
