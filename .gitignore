@@ -7,9 +7,9 @@
 /IOT_Office_to_TU1/
 /IOT_TU_to_Office/
 /IOT_TU_to_Office1/
-/TU_Office_to_IOT3/
-IOT_TU_to_Office3/
-/IOT_Office_to_TU3
+/TU_Office_to_IOT*
+/IOT_TU_to_Office*
+/IOT_Office_to_TU*
 /IOT/
 /Office/
 /TU/

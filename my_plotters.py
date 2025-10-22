@@ -398,7 +398,7 @@ def plot_umap_input_by_los(CIRS, Domains, LOS, save_plots,
             s=32, alpha=0.7
         )
         plt.title("")
-        plt.xlabel("UMAP-1"); plt.ylabel("UMAP-2")
+        plt.xlabel("UMAP-1",fontsize=13,fontweight="bold"); plt.ylabel("UMAP-2",fontsize=13,fontweight="bold")
         plt.xlim(*xlim); plt.ylim(*ylim)
         plt.gca().grid(True, which="major", axis="both", linestyle="--", alpha=0.5)
         plt.gca().set_axisbelow(True)
@@ -532,7 +532,11 @@ def plot_encoded_signals_pro(ae, decoder, encoder, CIRS, labels, save_plots,
         ax.set_axisbelow(True)
         ax.spines["top"].set_visible(False)
         ax.spines["right"].set_visible(False)
-        ax.tick_params(axis="both", which="major", labelsize=9)
+
+        ax.tick_params(axis="both", which="major", labelsize=13)
+        for t in ax.get_xticklabels() + ax.get_yticklabels():
+            t.set_fontweight("bold")   # ← make tick labels bold
+
 
     # -------- builder for a 2x2 figure (LOS or NLOS)
     def make_figure(target_cls):
@@ -557,7 +561,7 @@ def plot_encoded_signals_pro(ae, decoder, encoder, CIRS, labels, save_plots,
             # Plot
             ax.plot(raw, linewidth=1.6, label="Input")
             ax.plot(rec, linewidth=1.4, linestyle="--", label="Reconstruction")
-            ax.set_title(f"{split} — {target_cls}\nMAE={mae:.3g} | RMSE={rmse:.3g}", fontsize=10)
+            ax.set_title(f"{split} — {target_cls}\nMAE={mae:.3g} | RMSE={rmse:.3g}", fontsize=13,fontweight="bold")
             ax.set_ylim(*ylim)
             _beautify_ax(ax)
 
@@ -565,12 +569,12 @@ def plot_encoded_signals_pro(ae, decoder, encoder, CIRS, labels, save_plots,
                 handles_cache = ax.get_legend_handles_labels()
 
         # shared labels & legend
-        fig.supxlabel("Sample Index", fontsize=11)
-        fig.supylabel("Amplitude", fontsize=11)
+        fig.supxlabel("Sample Index", fontsize=13,fontweight="bold")
+        fig.supylabel("Amplitude", fontsize=13,fontweight="bold")
         if handles_cache is not None:
             fig.legend(*handles_cache, loc="upper right", ncol=2, frameon=False)
 
-        fig.suptitle("Input vs. Reconstruction", y=0.995, fontsize=13)
+        
         fig.tight_layout(rect=[0, 0, 1, 0.97])
 
         # save
@@ -827,8 +831,8 @@ def plot_history_dashboard(
                 **marker_kwargs
             )
 
-        ax.set_title(_prettify(base), fontsize=12, pad=8)
-        ax.set_xlabel("Epoch"); ax.set_ylabel("Value")
+        ax.set_title(_prettify(base), fontsize=13,fontweight="bold", pad=8)
+        ax.set_xlabel("Epoch",fontsize=13,fontweight="bold"); ax.set_ylabel("Value",fontsize=13,fontweight="bold")
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         ax.grid(True, which="major", axis="both", linestyle="--", alpha=0.5)
         ax.set_axisbelow(True)
@@ -928,8 +932,8 @@ def plot_history_dashboard_with_test(
                 **marker_kwargs
             )
 
-        ax.set_title(_prettify(base), fontsize=12, pad=8)
-        ax.set_xlabel("Epoch"); ax.set_ylabel("Value")
+        ax.set_title(_prettify(base), fontsize=13,fontweight="bold", pad=8)
+        ax.set_xlabel("Epoch",fontsize=13,fontweight="bold"); ax.set_ylabel("Value",fontsize=13,fontweight="bold")
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         ax.grid(True, which="major", axis="both", linestyle="--", alpha=0.5)
         ax.set_axisbelow(True)
@@ -1014,18 +1018,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.metrics import confusion_matrix, classification_report
+from matplotlib.colors import Normalize
 
-import os
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
-from sklearn.metrics import confusion_matrix, classification_report
-
-import os
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
-from sklearn.metrics import confusion_matrix, classification_report
 
 def plot_confusion_matrices_grid(
     classifier, CIRS, Y, h, title="Confusion Matrix",
@@ -1041,7 +1035,6 @@ def plot_confusion_matrices_grid(
     for split in splits:
         X      = CIRS[split][..., None]
         y_true = Y[split].astype(int)
-
         raw    = classifier.predict(X, verbose=0)
         probs  = _extract_nlos_prob(raw)
         preds  = (probs >= thr).astype(int)
@@ -1053,10 +1046,9 @@ def plot_confusion_matrices_grid(
         cms[split] = cm
         accs[split] = np.trace(cm) / np.sum(cm)
 
-    vmax = max(cm.max() for cm in cms.values())
-
+    # figure without a shared colorbar column
     fig = plt.figure(figsize=(14, 12), constrained_layout=True)
-    gs  = fig.add_gridspec(2, 3, width_ratios=[1, 1, 0.045], height_ratios=[1, 1])
+    gs  = fig.add_gridspec(2, 2, height_ratios=[1, 1], width_ratios=[1, 1])
 
     axes = [
         fig.add_subplot(gs[0, 0]),
@@ -1064,17 +1056,22 @@ def plot_confusion_matrices_grid(
         fig.add_subplot(gs[1, 0]),
         fig.add_subplot(gs[1, 1]),
     ]
-    cax = fig.add_subplot(gs[:, 2])  # colorbar column spanning both rows
 
-    ims = []
     for ax, split in zip(axes, splits):
+        # per-panel autoscale; no vmin/vmax
         im = sns.heatmap(
             cms[split], ax=ax, annot=True, fmt="d", cmap="Blues",
-            cbar=False, vmin=0, vmax=vmax,
+            cbar=False,
             xticklabels=["LOS","NLOS"], yticklabels=["LOS","NLOS"],
             annot_kws={"fontsize": annot_fs, "fontweight": "bold"}
         )
-        ims.append(im)
+
+        # per-ax colorbar (same style as your other code)
+        cb = fig.colorbar(im.collections[0], ax=ax, fraction=0.046, pad=0.04)
+        cb.set_label("Count", fontsize=cbar_label_fs, fontweight="bold")
+        cb.ax.tick_params(labelsize=tick_fs)
+        for t in cb.ax.get_yticklabels():
+            t.set_fontweight("bold")
 
         ax.set_title(split, fontsize=panel_title_fs, fontweight="bold")
         ax.set_xlabel(f"Predicted\nAccuracy: {accs[split]:.2f}",
@@ -1084,20 +1081,12 @@ def plot_confusion_matrices_grid(
         for tick in ax.get_xticklabels() + ax.get_yticklabels():
             tick.set_fontweight("bold")
 
-    # single shared colorbar in its own column (no overlap)
-    cb = fig.colorbar(ims[0].collections[0], cax=cax)
-    cb.set_label("Count", fontsize=cbar_label_fs, fontweight="bold")
-    cb.ax.tick_params(labelsize=tick_fs)
-    for t in cb.ax.get_yticklabels():
-        t.set_fontweight("bold")
-
-    #fig.suptitle(title, fontsize=suptitle_fs, fontweight="bold", y=0.98)
-
     out_png = os.path.join(save_path, f"{title}_ALL.png")
     out_pdf = os.path.join(save_path, f"{title}_ALL.pdf")
     plt.savefig(out_png, dpi=200)
     plt.savefig(out_pdf)
     plt.close()
+
 
 
 

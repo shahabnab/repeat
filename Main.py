@@ -379,7 +379,7 @@ if __name__ == "__main__":
         if args.test_dataset != "all":
             dt_names,opt_add, train_size = DATASET_CONFIG[args.test_dataset]
             batch_size=[512,256]
-            epochs_num=[100,120,150]
+            epochs_num=[50,120,150]
             print(f"running {args.test_dataset} as test dataset")
             for ep in epochs_num:
                 for b in batch_size:
