@@ -61,75 +61,17 @@ def download_dataset(datasets_names,SEED):
     IOT.rename(columns={"label": "Label"}, inplace=True)
     IOT["Label"] = IOT["Label"].astype(int)
     #chanigng the LOS and NLOS labels to be 0 and 1 in TU dataset
-   ###################
-    WINDOW_LEFT = 50
-    WINDOW_RIGHT = 100
-    WIN_LEN = WINDOW_LEFT + WINDOW_RIGHT  # 150
-
-    def _to_int_scalar(x):
-        # اگر x آرایه/لیست است، اولین مقدار عددی معتبر را بردار
-        if isinstance(x, (list, tuple, np.ndarray)):
-            flat = np.asarray(x, dtype=object).ravel()
-            for val in flat:
-                try:
-                    f = float(val)
-                    if np.isnan(f):
-                        continue
-                    return int(round(f))
-                except Exception:
-                    continue
-            return None  # چیزی قابل‌تبدیل نبود
-
-        # اگر x اسکالر است
-        try:
-            f = float(x)
-            if np.isnan(f):
-                return None
-            return int(round(f))
-        except Exception:
-            return None
-
-    def cutting_cir(df, cir_col="CIR_amp", fp_col="sensor fp_idx"):
-        cir_list = df[cir_col].to_numpy()   # هر سطر: آرایه دامنه‌ها
-        fp_vals  = df[fp_col].to_numpy()    # هر سطر: ایندکس یا آرایه تک‌عنصری
-
-        cuts = []
-        for c, fp in zip(cir_list, fp_vals):
-            c = np.asarray(c, dtype=float).ravel()
-            fp_int = _to_int_scalar(fp)
-
-            if fp_int is None:
-                cuts.append(np.zeros(WIN_LEN, dtype=float))
-                continue
-
-            start = max(0, fp_int - WINDOW_LEFT)
-            end   = min(len(c), fp_int + WINDOW_RIGHT)
-
-            cut = c[start:end]
-            if cut.size < WIN_LEN:
-                cut = np.pad(cut, (0, WIN_LEN - cut.size), mode="constant")
-
-            cuts.append(cut)
-
-        return np.vstack(cuts)  # شکل: (N, 150)
-    # نرمال‌سازی CIR
-    TUall["CIR_amp"] = TUall["CIR_amp"].apply(lambda x: np.sqrt(np.asarray(x, dtype=float)) / 101.0)
-    with open("data/TUall.pickle", "rb") as f:
-            TUall = pickle.load(f)
-    TU = TUall.copy()
-    TU["sensor los"] = 1 - TU["sensor los"].astype(int)
-    TU = TU.rename(columns={"firstPath": "sensor fp_idx","sensor los":"Label"})
+    TUall["CIR_amp"] = TUall["CIR_amp"].apply(lambda x: np.sqrt(x) / 101)
+    mask = TUall["sensor los"].isin({"los", "nlos"})
+    TU = TUall.loc[mask].copy()
+    # map string labels → ints on the copy
+    TU["Label"] = TU["sensor los"].map({"los": 0, "nlos": 1}).astype(int)
 
 
-    # (اختیاری ولی مفید) چک کوتاه:
-    # print(TU[["sensor fp_idx","CIR_amp"]].head())
-
-    TU_cuts = cutting_cir(TU, cir_col="CIR_amp", fp_col="sensor fp_idx")
-    TU["CIR_amp"] = list(TU_cuts)  # هر ردیف آرایه‌ی 150تایی
-
+    TU_cuts=cutting_cir(TU)
+    cuts_list_TU = [row for row in TU_cuts]
+    TU["CIR_amp"] = cuts_list_TU
    
-
-   ###################
 
     Office.rename(columns={"label": "Label"}, inplace=True)
     Office["Label"]=Office["Label"].astype(int)
@@ -242,8 +184,7 @@ def slicing_dts(datasets, save_path, datasets_names, dt_rules, tr_size, SEED):
         dt_rules[0]: TRAIN1,
         dt_rules[1]: TRAIN2,
         dt_rules[2]: ADAPTION,
-        dt_rules[3]: TEST,
-        dt_rules[4]:test_adaption
+        dt_rules[3]: TEST
     }
 
     return balanced_dts

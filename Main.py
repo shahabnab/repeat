@@ -70,7 +70,7 @@ def run_scenario(DATASET_NAMES,epochs_num,batch_size,opt_add, TRAIN_SIZE, n_tria
         set_seed(SEED)
 
         #setting different roles for the datasets
-        DATASET_ROLES = ["TRAIN1", "TRAIN2", "ADAPTION", "TEST"]
+        DATASET_ROLES = ["TRAIN1", "TRAIN2", "ADAPTION", "TEST","whole_test"]
         #the number if samples with labels that can be used from the target domain
         ADAPTION_WITH_LABEL = 0
 
@@ -129,13 +129,13 @@ def run_scenario(DATASET_NAMES,epochs_num,batch_size,opt_add, TRAIN_SIZE, n_tria
                 d_tr=d_tr, d_val=d_val, d_test=d_test,
                 w_tr=w_tr, w_val=w_val, w_test=w_test,
                 l_tr=l_tr, l_val=l_val, l_test=l_test,
-                num_dom=num_dom, balanced_dtsets=balanced_dtsets,
+                num_dom=num_dom, whole_CIRS=CIRS,whole_LosLabels=LosLabels,balanced_dtsets=balanced_dtsets,
                 CIRS=CIRS, LosLabels=LosLabels, Domains=Domains, Weights=Weights,
                 SAVE_PLOTS_ROOT=SAVE_PLOTS_ROOT,
                 TRAIN_SIZE=TRAIN_SIZE,
                 DATASET_NAMES=DATASET_NAMES,
                 ADAPTION_WITH_LABEL=ADAPTION_WITH_LABEL,
-                SEED=SEED,
+                SEED=SEED
                 )
         run_optuna(
             objective_fn,epochs_num,opt_add,batch_size,
@@ -378,12 +378,15 @@ if __name__ == "__main__":
         
         if args.test_dataset != "all":
             dt_names,opt_add, train_size = DATASET_CONFIG[args.test_dataset]
-            batch_size=[512,256]
-            epochs_num=[50,120,150]
+            #batch_size=[512,256]
+            #epochs_num=[50,120,150]
+            batch_size=[128]
+            epochs_num=[50]
+            
             print(f"running {args.test_dataset} as test dataset")
             for ep in epochs_num:
                 for b in batch_size:
-                    run_scenario(dt_names,epochs_num,b,opt_add, train_size, n_trials=args.trials, direction=args.direction, SEED=Seed)
+                    run_scenario(dt_names,ep,b,opt_add, train_size, n_trials=args.trials, direction=args.direction, SEED=Seed)
         else:
             print("running all datasets as test dataset")
             batch_size=[512,256,128]

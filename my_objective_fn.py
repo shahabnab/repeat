@@ -88,7 +88,7 @@ def find_threshold_for_f1(y_true, y_probs):
                         best_thresh = thresh
                 return best_thresh
 
-def evaluate_model(ae,train_ds,val_ds, CIRS, LosLabels, Weights, h, config):
+def evaluate_model(ae,train_ds,val_ds, CIRS, LosLabels, Weights, h, config,whole_CIRS,whole_LosLabels):
     
             
             ################### Los models ###############################
@@ -225,6 +225,27 @@ def evaluate_model(ae,train_ds,val_ds, CIRS, LosLabels, Weights, h, config):
             TRAIN2_res  = predict_los_only(CIRS, LosLabels, "TRAIN2",  los_model,h, WEIGHTS=Weights)
             ADAPTION_res= predict_los_only(CIRS, LosLabels, "ADAPTION",los_model,h, WEIGHTS=Weights)
             TEST_res    = predict_los_only(CIRS, LosLabels, "TEST",    los_model,h, WEIGHTS=Weights)
+
+            threshold = h.get("METRIC_THRESHOLD")
+            # 1) Prepare arrays
+            lb_rule="whole_test"
+            X = np.asarray(whole_CIRS[lb_rule], dtype=np.float32)
+            if X.ndim == 2:
+                X = X[..., None]  # (N, T) -> (N, T, 1) channel dim
+            
+
+           
+
+            # 3) Predict probabilities
+            probs = los_model.predict(X, verbose=0).reshape(-1).astype(np.float32)
+
+           
+            with open("data/TUall.pickle", "rb") as f:
+             TUall = pickle.load(f)
+            TUall["predicted_labels"]= probs
+            TUall.to_pickle("data/Graz.pickle")
+            TUall.to_excel("data/Graz.xlsx")
+
 
         
             
@@ -407,6 +428,8 @@ def objective(
     w_tr, w_val, w_test,
     l_tr, l_val, l_test,
     num_dom,
+    whole_CIRS,
+    whole_LosLabels,
     balanced_dtsets,
     CIRS, LosLabels, Domains, Weights,
     SAVE_PLOTS_ROOT: Path,
@@ -417,7 +440,9 @@ def objective(
     force_epochs: int | None = None,
     force_batch: int | None = None,
     save_tag: str | None = None,
-    enable_test_results: bool = False
+    enable_test_results: bool = False,
+    
+    
 ):
     trial_dir = SAVE_PLOTS_ROOT / (save_tag or f"trial_{trial.number:03d}")
     trial_dir.mkdir(parents=True, exist_ok=True)
@@ -458,7 +483,7 @@ def objective(
     )
     steps_per_epoch = math.ceil(len(X_tr) / h["AE_BATCH"])
     optuna_score = train_model(ae, grl, train_ds, val_ds,test_ds, h, trial, config, num_dom, steps_per_epoch, enable_test_results)
-    evaluate_model(ae, train_ds, val_ds, CIRS, LosLabels, Weights, h,config)
+    evaluate_model(ae, train_ds, val_ds, CIRS, LosLabels, Weights, h,config,whole_CIRS,whole_LosLabels)
     plotting_figures(ae, CIRS, LosLabels, Domains, X_test, h)
     trial.set_user_attr("optuna_score", float(optuna_score))
     return optuna_score

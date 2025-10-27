@@ -3,12 +3,9 @@ def cutting_cir(df):
     cir=df["CIR_amp"].to_numpy()
     fp_idx=df["sensor fp_idx"].to_numpy()
     cut_cir=[]
-
-
     for c,first_peak in zip(cir, fp_idx):
      
-         cut_cir.append(c[first_peak-50: first_peak+100])
-                
+         cut_cir.append(c[first_peak-50: first_peak+100])          
     return np.array(cut_cir)
 
 
