@@ -37,6 +37,12 @@ def download_dataset(datasets_names,SEED):
     if not os.path.exists("data/Office.pickle"):
         print("Downloading Office dataset...")
         gdown.download(id="1QhLyo9_4pSfvkXhyJ5DrC4P2qZcf9OdV", output="data/Office.pickle", quiet=False)
+
+    if not os.path.exists("data/Graz.pickle"):
+        print("Downloading Office dataset...")
+        gdown.download(id="1jv67EErv9n2Cm-i9Psm-Y-JSV9dJqVKm", output="data/Graz.pickle", quiet=False)    
+   
+        
 ############################## using them in dataframes ##########################################
 
 
@@ -53,6 +59,9 @@ def download_dataset(datasets_names,SEED):
 
     with open("data/Office.pickle", "rb") as f:
         Office = pickle.load(f)
+    with open("data/Graz.pickle", "rb") as f:
+        Graz = pickle.load(f)
+
     #concatenating the IOT_PT1 and IOT_PT2 datasets
 
     IOT = pd.concat([IOT_PT1[["label", "CIR_amp","Sensor rng","sensor rssi","sensor fp_power","camera rng"]], IOT_PT2[["label", "CIR_amp","Sensor rng","sensor rssi","sensor fp_power","camera rng"]]], axis=0, ignore_index=True).reset_index(drop=True)
@@ -61,75 +70,35 @@ def download_dataset(datasets_names,SEED):
     IOT.rename(columns={"label": "Label"}, inplace=True)
     IOT["Label"] = IOT["Label"].astype(int)
     #chanigng the LOS and NLOS labels to be 0 and 1 in TU dataset
-   ###################
-    WINDOW_LEFT = 50
-    WINDOW_RIGHT = 100
-    WIN_LEN = WINDOW_LEFT + WINDOW_RIGHT  # 150
-
-    def _to_int_scalar(x):
-        # اگر x آرایه/لیست است، اولین مقدار عددی معتبر را بردار
-        if isinstance(x, (list, tuple, np.ndarray)):
-            flat = np.asarray(x, dtype=object).ravel()
-            for val in flat:
-                try:
-                    f = float(val)
-                    if np.isnan(f):
-                        continue
-                    return int(round(f))
-                except Exception:
-                    continue
-            return None  # چیزی قابل‌تبدیل نبود
-
-        # اگر x اسکالر است
-        try:
-            f = float(x)
-            if np.isnan(f):
-                return None
-            return int(round(f))
-        except Exception:
-            return None
-
-    def cutting_cir(df, cir_col="CIR_amp", fp_col="sensor fp_idx"):
-        cir_list = df[cir_col].to_numpy()   # هر سطر: آرایه دامنه‌ها
-        fp_vals  = df[fp_col].to_numpy()    # هر سطر: ایندکس یا آرایه تک‌عنصری
-
-        cuts = []
-        for c, fp in zip(cir_list, fp_vals):
-            c = np.asarray(c, dtype=float).ravel()
-            fp_int = _to_int_scalar(fp)
-
-            if fp_int is None:
-                cuts.append(np.zeros(WIN_LEN, dtype=float))
-                continue
-
-            start = max(0, fp_int - WINDOW_LEFT)
-            end   = min(len(c), fp_int + WINDOW_RIGHT)
-
-            cut = c[start:end]
-            if cut.size < WIN_LEN:
-                cut = np.pad(cut, (0, WIN_LEN - cut.size), mode="constant")
-
-            cuts.append(cut)
-
-        return np.vstack(cuts)  # شکل: (N, 150)
-    # نرمال‌سازی CIR
-    TUall["CIR_amp"] = TUall["CIR_amp"].apply(lambda x: np.sqrt(np.asarray(x, dtype=float)) / 101.0)
-    with open("data/TUall.pickle", "rb") as f:
-            TUall = pickle.load(f)
-    TU = TUall.copy()
-    TU["sensor los"] = 1 - TU["sensor los"].astype(int)
-    TU = TU.rename(columns={"firstPath": "sensor fp_idx","sensor los":"Label"})
+    TUall["CIR_amp"] = TUall["CIR_amp"].apply(lambda x: np.sqrt(x) / 101)
+    mask = TUall["sensor los"].isin({"los", "nlos"})
+    TU = TUall.loc[mask].copy()
+    # map string labels → ints on the copy
+    TU["Label"] = TU["sensor los"].map({"los": 0, "nlos": 1}).astype(int)
 
 
-    # (اختیاری ولی مفید) چک کوتاه:
-    # print(TU[["sensor fp_idx","CIR_amp"]].head())
+    TU_cuts=cutting_cir(TU)
+    cuts_list_TU = [row for row in TU_cuts]
+    TU["CIR_amp"] = cuts_list_TU
 
-    TU_cuts = cutting_cir(TU, cir_col="CIR_amp", fp_col="sensor fp_idx")
-    TU["CIR_amp"] = list(TU_cuts)  # هر ردیف آرایه‌ی 150تایی
+
+    ##########################################
+    
+   
+    
+  
+    print("first path datatype:",Graz["sensor fp_idx"][0].dtype)
+
 
    
 
-   ###################
+    Graz_cuts=cutting_cir(Graz)
+    cuts_list_Graz = [row for row in Graz_cuts]
+    Graz["CIR_amp"] = cuts_list_Graz 
+    Graz.rename(columns={"sensor los": "Label"}, inplace=True)
+
+
+    #############################################
 
     Office.rename(columns={"label": "Label"}, inplace=True)
     Office["Label"]=Office["Label"].astype(int)
@@ -154,30 +123,35 @@ def download_dataset(datasets_names,SEED):
     dfs = {
         "IOT": IOT,
         "TU": TU,
-        "Office": Office
+        "Office": Office,
+        "Graz":Graz
     }
     train1=dfs[datasets_names[0]]
     train2=dfs[datasets_names[1]]
-    test=dfs[datasets_names[2]]
+    train3=dfs[datasets_names[2]]
+
+    test=dfs[datasets_names[3]]
     print("#################################################")
     print("datasets are as follows:")
     print("Train1:", datasets_names[0])
     print("Train2:", datasets_names[1])
-    print("Test & Adaption:", datasets_names[2])
+    print("Train2:", datasets_names[2])
+    print("Test & Adaption:", datasets_names[3])
     print("#################################################")
     #creating the datasets dictionary
     #creating train1, train2 and test datasets
     datasets={
         "train1": train1,
         "train2": train2,
+        "train3": train3,
         "test_adaption": test
     }
 
     return datasets
 
 def slicing_dts(datasets, save_path, datasets_names, dt_rules, tr_size, SEED):
-    Train1, Train2, test_adaption = (
-        datasets["train1"], datasets["train2"], datasets["test_adaption"]
+    Train1, Train2,Train3, test_adaption = (
+        datasets["train1"], datasets["train2"],datasets["train3"], datasets["test_adaption"]
     )
 
     # ── 1) convenience masks ───────────────────────────────────────────────
@@ -185,10 +159,10 @@ def slicing_dts(datasets, save_path, datasets_names, dt_rules, tr_size, SEED):
     def nlos(df): return df[df["Label"] == 1]
 
     # ── 2) report sizes -----------------------------------------------------
-    for name, df in zip(datasets_names, [Train1, Train2, test_adaption]):
+    for name, df in zip(datasets_names, [Train1, Train2,Train3, test_adaption]):
         print(f"{name}: NLOS={len(nlos(df))}  LOS={len(los(df))}")
 
-    # ── 3) TRAIN1 / TRAIN2  -------------------------------------------------
+    # ── 3) TRAIN1 / TRAIN2/TRAIN3  -------------------------------------------------
     TRAIN1 = pd.concat([
         nlos(Train1).sample(min(tr_size, len(nlos(Train1))), random_state=SEED),
         los(Train1).sample(min(tr_size, len(los(Train1))),  random_state=SEED)
@@ -198,6 +172,12 @@ def slicing_dts(datasets, save_path, datasets_names, dt_rules, tr_size, SEED):
     TRAIN2 = pd.concat([
         nlos(Train2).sample(min(tr_size, len(nlos(Train2))), random_state=SEED),
         los(Train2).sample(min(tr_size, len(los(Train2))),  random_state=SEED)
+    ], ignore_index=True
+    )
+
+    TRAIN3 = pd.concat([
+        nlos(Train3).sample(min(tr_size, len(nlos(Train3))), random_state=SEED),
+        los(Train3).sample(min(tr_size, len(los(Train3))),  random_state=SEED)
     ], ignore_index=True
     )
 
@@ -223,6 +203,7 @@ def slicing_dts(datasets, save_path, datasets_names, dt_rules, tr_size, SEED):
            )
     TRAIN1   = shuffle_df(TRAIN1,   seed=SEED)
     TRAIN2   = shuffle_df(TRAIN2,   seed=SEED)
+    TRAIN3   = shuffle_df(TRAIN3,   seed=SEED)
     ADAPTION = shuffle_df(ADAPTION, seed=SEED)
     TEST = shuffle_df(TEST, seed=SEED)
 
@@ -232,6 +213,7 @@ def slicing_dts(datasets, save_path, datasets_names, dt_rules, tr_size, SEED):
     print("Datasets for training:\n")
     print(f"{datasets_names[0]} training 1 shape: ",TRAIN1.shape)
     print(f"{datasets_names[1]} training 2 shape: ",TRAIN2.shape)
+    print(f"{datasets_names[1]} training 3 shape: ",TRAIN2.shape)
     print(f"{datasets_names[2]} adaption shape: ",ADAPTION.shape)
     print(f"{datasets_names[2]} dataset test",TEST.shape)
 
@@ -241,9 +223,9 @@ def slicing_dts(datasets, save_path, datasets_names, dt_rules, tr_size, SEED):
     balanced_dts={
         dt_rules[0]: TRAIN1,
         dt_rules[1]: TRAIN2,
-        dt_rules[2]: ADAPTION,
-        dt_rules[3]: TEST,
-        dt_rules[4]:test_adaption
+        dt_rules[2]: TRAIN3,
+        dt_rules[3]: ADAPTION,
+        dt_rules[4]: TEST
     }
 
     return balanced_dts

@@ -369,19 +369,20 @@ if __name__ == "__main__":
 
         args = parser.parse_args()
         DATASET_CONFIG = {
-        "TU":     (["IOT", "Office", "TU"],"TU",    6500),
-        "Office": (["IOT", "TU", "Office"],"Office",8000),
-        "IOT":    (["TU", "Office", "IOT"], "IOT",   7000),
+        "GRAZ":   (["IOT", "Office", "TU","GRAZ"],  "GRAZ",     6500),
+        "TU":     (["IOT", "Office","GRAZ", "TU"],  "TU",       6500),
+        "Office": (["IOT", "TU", "GRAZ","Office"],  "Office"    ,8000),
+        "IOT":    (["TU", "Office","GRAZ", "IOT"],  "IOT",      7000),
         
         
     }
         
         if args.test_dataset != "all":
             dt_names,opt_add, train_size = DATASET_CONFIG[args.test_dataset]
-            #batch_size=[512,256]
-            #epochs_num=[50,120,150]
-            batch_size=[128]
-            epochs_num=[50]
+            batch_size=[512,256]
+            epochs_num=[50,120,150]
+            #batch_size=[128]
+            #epochs_num=[50]
             
             print(f"running {args.test_dataset} as test dataset")
             for ep in epochs_num:

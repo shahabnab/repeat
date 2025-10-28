@@ -244,7 +244,7 @@ def evaluate_model(ae,train_ds,val_ds, CIRS, LosLabels, Weights, h, config,whole
              TUall = pickle.load(f)
             TUall["predicted_labels"]= probs
             TUall.to_pickle("data/Graz.pickle")
-            TUall.to_excel("data/Graz.xlsx")
+            #TUall.to_excel("data/Graz.xlsx")
 
 
         
