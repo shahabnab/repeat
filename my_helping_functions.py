@@ -52,23 +52,25 @@ def set_seed(seed: int, *, enable_tf_op_determinism: bool = True, verbose: bool 
 
 
 def take_labels(datasets):
-    datasets_roles = ["TRAIN1","TRAIN2","ADAPTION","TEST"]
+    datasets_roles = ["TRAIN1","TRAIN2","TRAIN3","ADAPTION","TEST"]
 
 
     df_tr1  = datasets[datasets_roles[0]]
     df_tr2  = datasets[datasets_roles[1]]
-    df_dt   = datasets[datasets_roles[2]]
-    df_test = datasets[datasets_roles[3]]
+    df_tr3=datasets[datasets_roles[2]]
+    df_dt   = datasets[datasets_roles[3]]
+    df_test = datasets[datasets_roles[4]]
 
     tr1_lbl = df_tr1["Label"].astype(np.int32)
     tr2_lbl = df_tr2["Label"].astype(np.int32)
+    tr3_lbl = df_tr3["Label"].astype(np.int32)
     ad_lbl = df_dt["Label"].astype(np.int32)
     test_lb = df_test["Label"].astype(np.int32)
     Labels = {
         "role": [],
         "data": []
     }
-    for name, data in zip(datasets_roles, [tr1_lbl, tr2_lbl, ad_lbl, test_lb]):
+    for name, data in zip(datasets_roles, [tr1_lbl, tr2_lbl,tr3_lbl, ad_lbl, test_lb]):
         Labels["role"].append(name)
         Labels["data"].append(data)
 
@@ -79,22 +81,24 @@ def take_domains(datasets):
         "role": [],
         "data": []
     }
-    datasets_roles = ["TRAIN1","TRAIN2","ADAPTION","TEST"]
+    datasets_roles = ["TRAIN1","TRAIN2","TRAIN3","ADAPTION","TEST"]
     dom_tr1  = np.zeros(len(datasets[datasets_roles[0]]))
     dom_tr2  = np.ones(len(datasets[datasets_roles[1]]))
-    dom_adap   = np.full(len(datasets[datasets_roles[2]]), 2, dtype=np.int32)
-    dom_test = np.full(len(datasets[datasets_roles[3]]), 2, dtype=np.int32)
-    for name, data in zip(datasets_roles, [dom_tr1, dom_tr2, dom_adap, dom_test]):
+    dom_tr3  = np.full(len(datasets[datasets_roles[2]]), 2, dtype=np.int32)
+    dom_adap   = np.full(len(datasets[datasets_roles[3]]), 3, dtype=np.int32)
+    dom_test = np.full(len(datasets[datasets_roles[4]]), 3, dtype=np.int32)
+    for name, data in zip(datasets_roles, [dom_tr1, dom_tr2,dom_tr3, dom_adap, dom_test]):
         Domains["role"].append(name)
         Domains["data"].append(data)
     return dict(zip(Domains["role"], Domains["data"]))
 
 def take_weights(datasets,adapt_size=0):
-    datasets_roles = ["TRAIN1","TRAIN2","ADAPTION","TEST"]
+    datasets_roles = ["TRAIN1","TRAIN2","TRAIN3","ADAPTION","TEST"]
     w_tr1  = np.ones(len(datasets[datasets_roles[0]]))
     w_tr2  = np.ones(len(datasets[datasets_roles[1]]))
-    w_adap   = np.zeros(len(datasets[datasets_roles[2]]))
-    w_test = np.ones(len(datasets[datasets_roles[3]]))
+    w_tr3  = np.ones(len(datasets[datasets_roles[2]]))
+    w_adap   = np.zeros(len(datasets[datasets_roles[3]]))
+    w_test = np.ones(len(datasets[datasets_roles[4]]))
     weights={
         "role": [],
         "data": []
@@ -108,7 +112,7 @@ def take_weights(datasets,adapt_size=0):
         w_adap[chosen1] = 1
 
 
-    for name, data in zip(datasets_roles, [w_tr1, w_tr2, w_adap, w_test]):
+    for name, data in zip(datasets_roles, [w_tr1, w_tr2,w_tr3, w_adap, w_test]):
         weights["role"].append(name)
         weights["data"].append(data)
     return dict(zip(weights["role"], weights["data"]))

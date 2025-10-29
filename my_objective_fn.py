@@ -226,7 +226,7 @@ def evaluate_model(ae,train_ds,val_ds, CIRS, LosLabels, Weights, h, config,whole
             ADAPTION_res= predict_los_only(CIRS, LosLabels, "ADAPTION",los_model,h, WEIGHTS=Weights)
             TEST_res    = predict_los_only(CIRS, LosLabels, "TEST",    los_model,h, WEIGHTS=Weights)
 
-            threshold = h.get("METRIC_THRESHOLD")
+            """ threshold = h.get("METRIC_THRESHOLD")
             # 1) Prepare arrays
             lb_rule="whole_test"
             X = np.asarray(whole_CIRS[lb_rule], dtype=np.float32)
@@ -244,7 +244,7 @@ def evaluate_model(ae,train_ds,val_ds, CIRS, LosLabels, Weights, h, config,whole
              TUall = pickle.load(f)
             TUall["predicted_labels"]= probs
             TUall.to_pickle("data/Graz.pickle")
-            #TUall.to_excel("data/Graz.xlsx")
+            TUall.to_excel("data/Graz.xlsx") """
 
 
         

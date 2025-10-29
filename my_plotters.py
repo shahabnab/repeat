@@ -23,8 +23,8 @@ import pickle
 
 
 """ def plot_latent_umap(encoder_model, CIRS, Domains,save_plots, title="UMAP of Latent Space"):
-    X = np.concatenate([CIRS[k] for k in ("TRAIN1", "TRAIN2", "ADAPTION")])[..., None]
-    d = np.concatenate([Domains[k] for k in ("TRAIN1", "TRAIN2", "ADAPTION")])
+    X = np.concatenate([CIRS[k] for k in ("TRAIN1", "TRAIN2","TRAIN3", "ADAPTION")])[..., None]
+    d = np.concatenate([Domains[k] for k in ("TRAIN1", "TRAIN2","TRAIN3", "ADAPTION")])
 
     latent_vectors = encoder_model.predict(X)
     scaled_latents = StandardScaler().fit_transform(latent_vectors)
@@ -46,8 +46,8 @@ import pickle
 
 
 def plot_latent_umap_input( CIRS, Domains,save_plots, title="UMAP of Latent Space"):
-    X = np.concatenate([CIRS[k] for k in ("TRAIN1", "TRAIN2", "ADAPTION")])
-    d = np.concatenate([Domains[k] for k in ("TRAIN1", "TRAIN2", "ADAPTION")])
+    X = np.concatenate([CIRS[k] for k in ("TRAIN1", "TRAIN2","TRAIN3", "ADAPTION")])
+    d = np.concatenate([Domains[k] for k in ("TRAIN1", "TRAIN2","TRAIN3", "ADAPTION")])
 
     # Flatten each sample if X is 2D (samples, timesteps), else reshape appropriately
     if X.ndim == 3:
@@ -76,8 +76,8 @@ def plot_latent_umap_input( CIRS, Domains,save_plots, title="UMAP of Latent Spac
 
 
 def plot_latent_umap(encoder_model, CIRS, Domains, save_plots, title="UMAP of Latent Space"):
-    X = np.concatenate([CIRS[k] for k in ("TRAIN1", "TRAIN2", "ADAPTION")])[..., None]
-    d = np.concatenate([Domains[k] for k in ("TRAIN1", "TRAIN2", "ADAPTION")])
+    X = np.concatenate([CIRS[k] for k in ("TRAIN1", "TRAIN2","TRAIN3", "ADAPTION")])[..., None]
+    d = np.concatenate([Domains[k] for k in ("TRAIN1", "TRAIN2","TRAIN3", "ADAPTION")])
 
     latent_vectors = encoder_model.predict(X, verbose=0)
     scaled_latents = StandardScaler().fit_transform(latent_vectors)
@@ -104,11 +104,11 @@ def plot_latent_umap_by_los(encoder_model, CIRS, Domains, LOS, save_plots,
                                      n_neighbors=20, min_dist=0.1, metric="euclidean"):
     os.makedirs(save_plots, exist_ok=True)
 
-    X = np.concatenate([CIRS[k] for k in ("TRAIN1", "TRAIN2", "ADAPTION")])[..., None]
-    d = np.concatenate([Domains[k] for k in ("TRAIN1", "TRAIN2", "ADAPTION")])
+    X = np.concatenate([CIRS[k] for k in ("TRAIN1", "TRAIN2","TRAIN3", "ADAPTION")])[..., None]
+    d = np.concatenate([Domains[k] for k in ("TRAIN1", "TRAIN2","TRAIN3", "ADAPTION")])
 
     if isinstance(LOS, dict):
-        y = np.concatenate([LOS[k] for k in ("TRAIN1", "TRAIN2", "ADAPTION")]).ravel()
+        y = np.concatenate([LOS[k] for k in ("TRAIN1", "TRAIN2","TRAIN3", "ADAPTION")]).ravel()
     else:
         y = np.asarray(LOS).ravel()
 
@@ -162,11 +162,11 @@ def plot_umap_input_by_los(CIRS, Domains, LOS, save_plots,
                                     n_neighbors=20, min_dist=0.1, metric="euclidean"):
     os.makedirs(save_plots, exist_ok=True)
 
-    X = np.concatenate([CIRS[k] for k in ("TRAIN1", "TRAIN2", "ADAPTION")])
-    d = np.concatenate([Domains[k] for k in ("TRAIN1", "TRAIN2", "ADAPTION")])
+    X = np.concatenate([CIRS[k] for k in ("TRAIN1", "TRAIN2","TRAIN3", "ADAPTION")])
+    d = np.concatenate([Domains[k] for k in ("TRAIN1", "TRAIN2","TRAIN3", "ADAPTION")])
 
     if isinstance(LOS, dict):
-        y = np.concatenate([LOS[k] for k in ("TRAIN1", "TRAIN2", "ADAPTION")]).ravel()
+        y = np.concatenate([LOS[k] for k in ("TRAIN1", "TRAIN2","TRAIN3", "ADAPTION")]).ravel()
     else:
         y = np.asarray(LOS).ravel()
 
@@ -217,8 +217,8 @@ def plot_umap_input_by_los(CIRS, Domains, LOS, save_plots,
  """
 
 def plot_latent_umap(encoder_model, CIRS, Domains,save_plots, title="UMAP of Latent Space"):
-    X = np.concatenate([CIRS[k] for k in ("TRAIN1", "TRAIN2", "ADAPTION")])[..., None]
-    d = np.concatenate([Domains[k] for k in ("TRAIN1", "TRAIN2", "ADAPTION")])
+    X = np.concatenate([CIRS[k] for k in ("TRAIN1", "TRAIN2","TRAIN3", "ADAPTION")])[..., None]
+    d = np.concatenate([Domains[k] for k in ("TRAIN1", "TRAIN2","TRAIN3", "ADAPTION")])
 
     latent_vectors = encoder_model.predict(X)
     scaled_latents = StandardScaler().fit_transform(latent_vectors)
@@ -240,8 +240,8 @@ def plot_latent_umap(encoder_model, CIRS, Domains,save_plots, title="UMAP of Lat
 
 
 def plot_latent_umap_input( CIRS, Domains,save_plots, title=""):
-    X = np.concatenate([CIRS[k] for k in ("TRAIN1", "TRAIN2", "ADAPTION")])
-    d = np.concatenate([Domains[k] for k in ("TRAIN1", "TRAIN2", "ADAPTION")])
+    X = np.concatenate([CIRS[k] for k in ("TRAIN1", "TRAIN2","TRAIN3", "ADAPTION")])
+    d = np.concatenate([Domains[k] for k in ("TRAIN1", "TRAIN2","TRAIN3", "ADAPTION")])
 
     # Flatten each sample if X is 2D (samples, timesteps), else reshape appropriately
     if X.ndim == 3:
@@ -270,8 +270,8 @@ def plot_latent_umap_input( CIRS, Domains,save_plots, title=""):
 
 
 def plot_latent_umap(encoder_model, CIRS, Domains, save_plots, title=""):
-    X = np.concatenate([CIRS[k] for k in ("TRAIN1", "TRAIN2", "ADAPTION")])[..., None]
-    d = np.concatenate([Domains[k] for k in ("TRAIN1", "TRAIN2", "ADAPTION")])
+    X = np.concatenate([CIRS[k] for k in ("TRAIN1", "TRAIN2","TRAIN3", "ADAPTION")])[..., None]
+    d = np.concatenate([Domains[k] for k in ("TRAIN1", "TRAIN2","TRAIN3", "ADAPTION")])
 
     latent_vectors = encoder_model.predict(X, verbose=0)
     scaled_latents = StandardScaler().fit_transform(latent_vectors)
@@ -298,11 +298,11 @@ def plot_latent_umap_by_los(encoder_model, CIRS, Domains, LOS, save_plots,
                                      n_neighbors=20, min_dist=0.1, metric="euclidean"):
     os.makedirs(save_plots, exist_ok=True)
 
-    X = np.concatenate([CIRS[k] for k in ("TRAIN1", "TRAIN2", "ADAPTION")])[..., None]
-    d = np.concatenate([Domains[k] for k in ("TRAIN1", "TRAIN2", "ADAPTION")])
+    X = np.concatenate([CIRS[k] for k in ("TRAIN1", "TRAIN2","TRAIN3", "ADAPTION")])[..., None]
+    d = np.concatenate([Domains[k] for k in ("TRAIN1", "TRAIN2","TRAIN3", "ADAPTION")])
 
     if isinstance(LOS, dict):
-        y = np.concatenate([LOS[k] for k in ("TRAIN1", "TRAIN2", "ADAPTION")]).ravel()
+        y = np.concatenate([LOS[k] for k in ("TRAIN1", "TRAIN2","TRAIN3", "ADAPTION")]).ravel()
     else:
         y = np.asarray(LOS).ravel()
 
@@ -356,11 +356,11 @@ def plot_umap_input_by_los(CIRS, Domains, LOS, save_plots,
                                     n_neighbors=20, min_dist=0.1, metric="euclidean"):
     os.makedirs(save_plots, exist_ok=True)
 
-    X = np.concatenate([CIRS[k] for k in ("TRAIN1", "TRAIN2", "ADAPTION")])
-    d = np.concatenate([Domains[k] for k in ("TRAIN1", "TRAIN2", "ADAPTION")])
+    X = np.concatenate([CIRS[k] for k in ("TRAIN1", "TRAIN2","TRAIN3", "ADAPTION")])
+    d = np.concatenate([Domains[k] for k in ("TRAIN1", "TRAIN2","TRAIN3", "ADAPTION")])
 
     if isinstance(LOS, dict):
-        y = np.concatenate([LOS[k] for k in ("TRAIN1", "TRAIN2", "ADAPTION")]).ravel()
+        y = np.concatenate([LOS[k] for k in ("TRAIN1", "TRAIN2","TRAIN3", "ADAPTION")]).ravel()
     else:
         y = np.asarray(LOS).ravel()
 
@@ -542,7 +542,7 @@ def plot_encoded_signals_pro(ae, decoder, encoder, CIRS, labels, save_plots,
     def make_figure(target_cls):
         fig, axes = plt.subplots(2, 2, figsize=(12, 8), sharex=True, sharey=True)
         axes = axes.ravel()
-        order = ("TRAIN1", "TRAIN2", "ADAPTION", "TEST")
+        order = ("TRAIN1", "TRAIN2","TRAIN3", "ADAPTION", "TEST")
 
         # Plot each split in a cell (or hide if missing)
         handles_cache = None
@@ -1029,7 +1029,7 @@ def plot_confusion_matrices_grid(
     os.makedirs(save_path, exist_ok=True)
     thr = h.get("METRIC_THRESHOLD")
 
-    splits = ["TRAIN1", "TRAIN2", "ADAPTION", "TEST"]
+    splits = ["TRAIN1", "TRAIN2","TRAIN3", "ADAPTION", "TEST"]
 
     cms, accs = {}, {}
     for split in splits:

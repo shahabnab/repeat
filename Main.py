@@ -52,16 +52,6 @@ except Exception as e:
     print(f"⚠️ Could not set memory growth: {e}")
 
 
-
-
-        
-
-
-
-
-
-
-
 def run_scenario(DATASET_NAMES,epochs_num,batch_size,opt_add, TRAIN_SIZE, n_trials, direction, SEED=42):
 
         print(f"=== Scenario: {DATASET_NAMES} with TRAIN_SIZE={TRAIN_SIZE} ===")
@@ -70,11 +60,11 @@ def run_scenario(DATASET_NAMES,epochs_num,batch_size,opt_add, TRAIN_SIZE, n_tria
         set_seed(SEED)
 
         #setting different roles for the datasets
-        DATASET_ROLES = ["TRAIN1", "TRAIN2", "ADAPTION", "TEST","whole_test"]
+        DATASET_ROLES = ["TRAIN1", "TRAIN2","TRAIN3", "ADAPTION", "TEST","whole_test"]
         #the number if samples with labels that can be used from the target domain
         ADAPTION_WITH_LABEL = 0
 
-        scenario_tag = f"{DATASET_NAMES[0]}_{DATASET_NAMES[1]}_to_{DATASET_NAMES[2]}"
+        scenario_tag = f"{DATASET_NAMES[0]}_{DATASET_NAMES[1]}_{DATASET_NAMES[2]}_to_{DATASET_NAMES[3]}"
         SAVE_PLOTS_ROOT = Path(scenario_tag)
         SAVE_PLOTS_ROOT.mkdir(exist_ok=True)
         WHOLE_RES_XLSX = "whole_res.xlsx"
@@ -100,10 +90,10 @@ def run_scenario(DATASET_NAMES,epochs_num,batch_size,opt_add, TRAIN_SIZE, n_tria
         Weights = take_weights(balanced_dtsets, ADAPTION_WITH_LABEL)
 
         # ---- assemble arrays ---- 
-        X  = np.concatenate([CIRS[k] for k in ("TRAIN1","TRAIN2","ADAPTION")])[..., None].astype('float32', copy=True)
-        d  = np.concatenate([Domains[k] for k in ("TRAIN1","TRAIN2","ADAPTION")]).astype(np.int32, copy=True)
-        w  = np.concatenate([Weights[k] for k in ("TRAIN1","TRAIN2","ADAPTION")]).astype(np.float32,copy=True)
-        l  = np.concatenate([LosLabels[k] for k in ("TRAIN1","TRAIN2","ADAPTION")]).astype(np.float32,copy=True)
+        X  = np.concatenate([CIRS[k] for k in ("TRAIN1","TRAIN2","TRAIN3","ADAPTION")])[..., None].astype('float32', copy=True)
+        d  = np.concatenate([Domains[k] for k in ("TRAIN1","TRAIN2","TRAIN3","ADAPTION")]).astype(np.int32, copy=True)
+        w  = np.concatenate([Weights[k] for k in ("TRAIN1","TRAIN2","TRAIN3","ADAPTION")]).astype(np.float32,copy=True)
+        l  = np.concatenate([LosLabels[k] for k in ("TRAIN1","TRAIN2","TRAIN3","ADAPTION")]).astype(np.float32,copy=True)
         
 
         #test set
@@ -349,7 +339,7 @@ if __name__ == "__main__":
                 "--test-dataset",       # use dash in the CLI
                 dest="test_dataset",    # store in test_dataset
                 type=str,
-                choices=["IOT", "Office", "TU", "all"],
+                choices=["IOT", "Office", "TU","Graz","all"],
                 default="IOT",
                 help="Dataset to use as test set: IOT | Office | TU | all",
             )
@@ -369,10 +359,10 @@ if __name__ == "__main__":
 
         args = parser.parse_args()
         DATASET_CONFIG = {
-        "GRAZ":   (["IOT", "Office", "TU","GRAZ"],  "GRAZ",     6500),
-        "TU":     (["IOT", "Office","GRAZ", "TU"],  "TU",       6500),
-        "Office": (["IOT", "TU", "GRAZ","Office"],  "Office"    ,8000),
-        "IOT":    (["TU", "Office","GRAZ", "IOT"],  "IOT",      7000),
+        "Graz":   (["IOT", "Office", "TU","Graz"],  "Graz",     6500),
+        "TU":     (["IOT", "Office","Graz", "TU"],  "TU",       6500),
+        "Office": (["IOT", "TU", "Graz","Office"],  "Office"    ,8000),
+        "IOT":    (["TU", "Office","Graz", "IOT"],  "IOT",      7000),
         
         
     }
